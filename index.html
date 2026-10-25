@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shop Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6f5;--card:#fff;--ink:#17252a;--mute:#5b6b70;--line:#d9e0e0;--acc:#0b6b63;--accink:#fff;--warn:#a85a00;--bad:#b3261e;--warnbg:#fdf0dc;--badbg:#fbe4e2;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101719;--card:#182226;--ink:#e6eeee;--mute:#93a5a8;--line:#2a373b;--acc:#3fb8aa;--accink:#06201d;--warn:#f0a84a;--bad:#ff8a80;--warnbg:#3a2b12;--badbg:#3d1f1d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101719;--card:#182226;--ink:#e6eeee;--mute:#93a5a8;--line:#2a373b;--acc:#3fb8aa;--accink:#06201d;--warn:#f0a84a;--bad:#ff8a80;--warnbg:#3a2b12;--badbg:#3d1f1d;color-scheme:dark}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;max-width:960px;margin:0 auto}
+#shop{font:700 20px "Public Sans",system-ui,sans-serif;border:0;border-bottom:2px dashed transparent;background:transparent;color:var(--ink);width:100%;padding:4px 0}
+#shop:hover,#shop:focus{border-bottom-color:var(--line);outline:0}
+nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav button{flex:1;border:0;background:none;color:var(--mute);font:600 14px inherit;font-family:inherit;padding:14px 4px;min-height:48px;cursor:pointer;border-top:3px solid transparent}
+nav button.on{color:var(--acc);border-top-color:var(--acc)}
+main{max-width:960px;margin:0 auto;padding:4px 16px 100px}
+@media(min-width:800px){nav{position:static;max-width:960px;margin:0 auto;border:0;border-bottom:1px solid var(--line);background:none;padding:0 16px}nav button{flex:0 0 auto;padding:12px 20px;border-top:0;border-bottom:3px solid transparent}nav button.on{border-bottom-color:var(--acc)}main{padding-bottom:40px}}
+button,input,select{font:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:10px 14px;min-height:44px}
+button.pri{background:var(--acc);color:var(--accink);border-color:var(--acc);font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.dng{color:var(--bad);border-color:var(--bad)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);min-height:44px}
+.bar{display:flex;gap:10px;margin:8px 0 12px}.bar input{flex:1}.bar button{white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);min-height:56px}
+.row:last-child{border-bottom:0}.tap{cursor:pointer}.tap:hover{background:var(--bg)}
+.row small,.mute{color:var(--mute);font-size:13px;display:block}
+.qty{min-width:48px;text-align:center;padding:4px 8px;border-radius:6px;background:var(--bg);font-weight:600}
+.qty.low{background:var(--warnbg);color:var(--warn)}.qty.out{background:var(--badbg);color:var(--bad)}
+.price{font-weight:600;min-width:72px;text-align:right}
+.empty{padding:28px 16px;text-align:center;color:var(--mute)}.empty button{margin-top:10px}
+.note{background:var(--warnbg);color:var(--warn);padding:8px 12px;border-radius:8px;margin:0 0 12px;font-weight:600}
+.two{display:grid;gap:16px}@media(min-width:800px){.two{grid-template-columns:1.2fr 1fr;align-items:start}}
+.scroll{max-height:45vh;overflow:auto}
+.cart{padding:14px}.cart h2,main h2{font-size:17px;margin:18px 0 8px}.cart h2{margin-top:0}
+.line{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.step{display:flex;align-items:center;gap:6px}.step button{padding:0;width:40px;min-height:40px}.step b{min-width:26px;text-align:center}
+.tot{display:flex;justify-content:space-between;font-size:20px;font-weight:700;margin:14px 0}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}.seg button.on{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}@media(min-width:800px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}.stat b{display:block;font-size:22px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);width:min(440px,calc(100% - 24px));padding:18px;max-height:90vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.5)}dialog h3{margin:0 0 12px}
+label{display:block;font-size:13px;font-weight:600;color:var(--mute);margin:10px 0 4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.err{color:var(--bad);font-size:14px;min-height:18px;margin:8px 0 0}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 0;text-align:left;border-bottom:1px solid var(--line)}td:last-child,th:last-child{text-align:right}
+@media print{header,nav,main{display:none!important}dialog{position:static;border:0}.acts{display:none}}
+</style></head>
+<body>
+<header><input id="shop" aria-label="Shop name" onchange="saveShop(this.value)"></header>
+<div id="banner" class="note" role="alert" hidden style="max-width:928px;width:calc(100% - 32px);margin:0 auto 8px"></div>
+<nav>
+<button data-t="stock" onclick="go('stock')">Stock</button>
+<button data-t="bill" onclick="go('bill')">New bill</button>
+<button data-t="bills" onclick="go('bills')">Bills</button>
+<button data-t="rep" onclick="go('rep')">Reports</button>
+</nav>
+<main id="main"></main>
+
+<dialog id="dI">
+<h3 id="dt">Add item</h3>
+<label for="fn">Item name</label><input id="fn" autocomplete="off">
+<label for="fs">Code or SKU (optional)</label><input id="fs" autocomplete="off">
+<div class="g2"><div><label for="fp">Selling price (₹)</label><input id="fp" type="number" inputmode="decimal" min="0" step="any"></div>
+<div><label for="fc">Cost price (₹)</label><input id="fc" type="number" inputmode="decimal" min="0" step="any"></div>
+<div><label for="fq">Stock in hand</label><input id="fq" type="number" inputmode="numeric" min="0" step="1"></div>
+<div><label for="fl">Warn me at or below</label><input id="fl" type="number" inputmode="numeric" min="0" step="1"></div></div>
+<p class="err" id="fe"></p>
+<div class="acts"><button id="fd" class="dng" onclick="delItem()" hidden>Delete item</button><button onclick="$('dI').close()">Cancel</button><button class="pri" onclick="saveItem()">Save item</button></div>
+</dialog>
+<dialog id="dR"></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ===== Paste your Supabase details here (Project Settings > API) ===== */
+const SUPABASE_URL='https://asbooiaszvcfrlzymnnk.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzYm9vaWFzenZjZnJsenltbm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MTE2MjksImV4cCI6MjEwODQ4NzYyOX0.CtI6Qq5qVe6mnPEDA7yJZBUBc1SHmw_gzbr_7ICbExI';
+/* ===================================================================== */
+let S={shop:'My Shop',items:[],bills:[]},db=null,busy=false;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>'₹'+(+n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+const dt=d=>new Date(d).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+const find=id=>S.items.find(x=>x.id===id);
+let tab='stock',q='',bq='',cart={},cust='',rp='6',editId=null,delArm=false;
+
+function go(t){tab=t;render()}
+function render(){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  $('main').innerHTML=({stock:vStock,bill:vBill,bills:vBills,rep:vRep})[tab]();
+}
+
+/* ---------- Stock ---------- */
+function qcls(i){return i.qty<=0?'out':i.qty<=i.low?'low':''}
+function vStock(){
+  const low=S.items.filter(i=>i.qty<=i.low).length;
+  return `<div class="bar"><input type="search" placeholder="Search by name or code" aria-label="Search items" value="${esc(q)}" oninput="q=this.value;$('list').innerHTML=stockList()"><button class="pri" onclick="openItem()">Add item</button></div>
+  ${low?`<p class="note">${low} item${low>1?'s need':' needs'} restocking.</p>`:''}
+  <div class="card" id="list">${stockList()}</div>`;
+}
+function stockList(){
+  if(!S.items.length)return `<div class="empty">No items yet. Add what you sell, with its price and how many you have.<br><button class="pri" onclick="openItem()">Add your first item</button></div>`;
+  const l=S.items.filter(i=>(i.name+' '+i.sku).toLowerCase().includes(q.toLowerCase()));
+  if(!l.length)return `<div class="empty">No items match “${esc(q)}”.</div>`;
+  return l.map(i=>`<div class="row tap" onclick="openItem('${i.id}')"><div><b>${esc(i.name)}</b><small>${i.sku?esc(i.sku)+' · ':''}Cost ${fmt(i.cost)}</small></div><span class="qty ${qcls(i)}">${i.qty}</span><span class="price">${fmt(i.price)}</span></div>`).join('');
+}
+function openItem(id){
+  editId=id||null;delArm=false;
+  const i=find(id)||{name:'',sku:'',price:'',cost:'',qty:'',low:5};
+  $('fn').value=i.name;$('fs').value=i.sku;$('fp').value=i.price;$('fc').value=i.cost;$('fq').value=i.qty;$('fl').value=i.low;
+  $('dt').textContent=id?'Edit item':'Add item';$('fd').hidden=!id;$('fd').textContent='Delete item';$('fe').textContent='';
+  $('dI').showModal();
+}
+function saveItem(){
+  const n=$('fn').value.trim(),p=parseFloat($('fp').value),c=parseFloat($('fc').value)||0,qy=parseInt($('fq').value),lw=parseInt($('fl').value);
+  if(!n||isNaN(p)||p<0||isNaN(qy)||qy<0){$('fe').textContent='Enter a name, a selling price and a stock count of 0 or more.';return}
+  const o={name:n,sku:$('fs').value.trim(),price:p,cost:c,qty:qy,low:isNaN(lw)?0:lw};
+  (async()=>{try{
+    const r=editId?await db.from('items').update(o).eq('id',editId):await db.from('items').insert(o);
+    if(r.error)throw r.error;
+    await load();$('dI').close();render();
+  }catch(e){$('fe').textContent='Could not save: '+(e.message||e)}})();
+}
+function delItem(){
+  if(!delArm){delArm=true;$('fd').textContent='Tap again to delete';return}
+  run(async()=>{const r=await db.from('items').delete().eq('id',editId);if(r.error)throw r.error;delete cart[editId];await load();$('dI').close();render()});
+}
+
+/* ---------- Billing ---------- */
+function vBill(){
+  return `<div class="two"><section><div class="bar"><input type="search" placeholder="Search items to add" aria-label="Search items" value="${esc(bq)}" oninput="bq=this.value;$('bl').innerHTML=billList()"></div><div class="card scroll" id="bl">${billList()}</div></section>
+  <section class="card cart" id="cart">${cartHTML()}</section></div>`;
+}
+function billList(){
+  if(!S.items.length)return `<div class="empty">Add items in Stock first.<br><button class="pri" onclick="go('stock')">Go to Stock</button></div>`;
+  const l=S.items.filter(i=>(i.name+' '+i.sku).toLowerCase().includes(bq.toLowerCase()));
+  if(!l.length)return `<div class="empty">No items match “${esc(bq)}”.</div>`;
+  return l.map(i=>{const left=i.qty-(cart[i.id]||0);
+    return `<div class="row"><div><b>${esc(i.name)}</b><small>${fmt(i.price)} · <span class="${qcls(i)==='out'?'':''}">${left} left</span></small></div><span></span><button ${left<=0?'disabled':''} onclick="add('${i.id}')">Add</button></div>`}).join('');
+}
+function cartTotal(){return Object.keys(cart).reduce((s,id)=>s+cart[id]*find(id).price,0)}
+function cartHTML(){
+  const ids=Object.keys(cart);
+  return `<h2>Current bill</h2>
+  ${ids.length?ids.map(id=>{const i=find(id);return `<div class="line"><div><b>${esc(i.name)}</b><small>${fmt(i.price)} each · ${fmt(i.price*cart[id])}</small></div><div class="step"><button aria-label="Remove one" onclick="step('${id}',-1)">−</button><b>${cart[id]}</b><button aria-label="Add one" onclick="step('${id}',1)">+</button></div></div>`}).join(''):`<p class="mute">Tap Add on an item to start a bill.</p>`}
+  <label for="cu">Customer name (optional)</label><input id="cu" value="${esc(cust)}" oninput="cust=this.value" autocomplete="off">
+  <div class="tot"><span>Total</span><span>${fmt(cartTotal())}</span></div>
+  <button class="pri" style="width:100%" ${ids.length?'':'disabled'} onclick="gen()">Generate bill</button>`;
+}
+function paint(){$('bl').innerHTML=billList();$('cart').innerHTML=cartHTML()}
+function add(id){const i=find(id);if(i&&(cart[id]||0)<i.qty)cart[id]=(cart[id]||0)+1;paint()}
+function step(id,d){const i=find(id),v=(cart[id]||0)+d;if(v<=0)delete cart[id];else if(v<=i.qty)cart[id]=v;paint()}
+function gen(){
+  if(busy)return;
+  const lines=Object.keys(cart).map(id=>({item_id:id,qty:cart[id]}));
+  if(!lines.length)return;
+  busy=true;
+  run(async()=>{
+    const r=await db.rpc('create_bill',{p_customer:cust.trim(),p_lines:lines});
+    if(r.error)throw r.error;
+    cart={};cust='';await load();render();
+    const nb=S.bills.find(x=>x.id===r.data);if(nb)showBill(nb.no);
+  }).finally(()=>{busy=false});
+}
+function showBill(no){
+  const b=S.bills.find(x=>x.no===no);if(!b)return;
+  $('dR').innerHTML=`<h3>${esc(S.shop)}</h3><p class="mute">Bill ${b.no} · ${dt(b.date)}${b.customer?'<br>Customer: '+esc(b.customer):''}</p>
+  <table><tr><th>Item</th><th>Qty × price</th><th>Amount</th></tr>${b.lines.map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty} × ${fmt(l.price)}</td><td>${fmt(l.price*l.qty)}</td></tr>`).join('')}</table>
+  <div class="tot"><span>Total</span><span>${fmt(b.total)}</span></div>
+  <div class="acts"><button onclick="try{window.print()}catch(e){}">Print</button><button class="pri" onclick="$('dR').close()">Done</button></div>`;
+  $('dR').showModal();
+}
+
+/* ---------- Bills ---------- */
+function vBills(){
+  if(!S.bills.length)return `<div class="card"><div class="empty">No bills yet. Bills you generate appear here.<br><button class="pri" onclick="go('bill')">Make a bill</button></div></div>`;
+  return `<h2>${S.bills.length} bill${S.bills.length>1?'s':''}</h2><div class="card">${S.bills.map(b=>`<div class="row tap" onclick="showBill('${b.no}')"><div><b>${b.no}</b><small>${dt(b.date)}${b.customer?' · '+esc(b.customer):''}</small></div><span></span><span class="price">${fmt(b.total)}</span></div>`).join('')}</div>`;
+}
+
+/* ---------- Reports ---------- */
+function vRep(){
+  const n=new Date(),st=rp==='all'?0:new Date(n.getFullYear(),n.getMonth(),n.getDate()-(+rp)).getTime();
+  const bs=S.bills.filter(b=>new Date(b.date).getTime()>=st);
+  let sales=0,profit=0,units=0;const top={};
+  bs.forEach(b=>b.lines.forEach(l=>{const r=l.price*l.qty;sales+=r;profit+=r-l.cost*l.qty;units+=l.qty;const t=top[l.name]||(top[l.name]={u:0,r:0});t.u+=l.qty;t.r+=r}));
+  const tl=Object.keys(top).map(k=>[k,top[k]]).sort((a,b)=>b[1].r-a[1].r).slice(0,8);
+  const sv=S.items.reduce((s,i)=>s+i.qty*i.cost,0),rv=S.items.reduce((s,i)=>s+i.qty*i.price,0);
+  const low=S.items.filter(i=>i.qty<=i.low).sort((a,b)=>a.qty-b.qty);
+  const P=[['0','Today'],['6','7 days'],['29','30 days'],['all','All time']];
+  return `<div class="seg">${P.map(p=>`<button class="${rp===p[0]?'on':''}" onclick="rp='${p[0]}';render()">${p[1]}</button>`).join('')}</div>
+  <div class="stats"><div class="stat"><span class="mute">Sales</span><b>${fmt(sales)}</b></div><div class="stat"><span class="mute">Profit</span><b>${fmt(profit)}</b></div><div class="stat"><span class="mute">Bills</span><b>${bs.length}</b></div><div class="stat"><span class="mute">Units sold</span><b>${units}</b></div></div>
+  <h2>Top sellers</h2><div class="card">${tl.length?tl.map(t=>`<div class="row"><div><b>${esc(t[0])}</b><small>${t[1].u} sold</small></div><span></span><span class="price">${fmt(t[1].r)}</span></div>`).join(''):'<div class="empty">No sales in this period.</div>'}</div>
+  <h2>Stock position</h2><div class="stats"><div class="stat"><span class="mute">Stock value at cost</span><b>${fmt(sv)}</b></div><div class="stat"><span class="mute">Stock value at selling price</span><b>${fmt(rv)}</b></div></div>
+  <h2>Running low</h2><div class="card">${low.length?low.map(i=>`<div class="row tap" onclick="go('stock');openItem('${i.id}')"><div><b>${esc(i.name)}</b></div><span class="qty ${qcls(i)}">${i.qty}</span><span class="mute">alert at ${i.low}</span></div>`).join(''):'<div class="empty">Everything is above its alert level.</div>'}</div>`;
+}
+
+function banner(m){const b=$('banner');b.textContent=m||'';b.hidden=!m}
+async function load(){
+  const [a,b,c]=await Promise.all([
+    db.from('items').select('*').order('name'),
+    db.from('bills').select('*, bill_lines(*)').order('created_at',{ascending:false}),
+    db.from('settings').select('shop_name').eq('id',1).maybeSingle()]);
+  const e=a.error||b.error||c.error;if(e)throw e;
+  S.items=a.data.map(i=>({id:i.id,name:i.name,sku:i.sku,price:+i.price,cost:+i.cost,qty:i.qty,low:i.low}));
+  S.bills=b.data.map(x=>({id:x.id,no:x.bill_no,date:x.created_at,customer:x.customer,total:+x.total,
+    lines:x.bill_lines.map(l=>({id:l.item_id,name:l.name,price:+l.price,cost:+l.cost,qty:l.qty}))}));
+  if(c.data)S.shop=c.data.shop_name;
+  $('shop').value=S.shop;
+}
+async function run(fn){try{banner('');await fn()}catch(e){banner('Something went wrong: '+(e.message||e)+'. Check your internet connection and try again.')}}
+async function saveShop(v){await run(async()=>{const r=await db.from('settings').update({shop_name:v}).eq('id',1);if(r.error)throw r.error;S.shop=v})}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&db&&!$('dI').open&&!$('dR').open)run(load).then(render)});
+(async()=>{
+  if(!window.supabase||SUPABASE_URL.indexOf('PASTE')===0){banner('Add your Supabase URL and anon key at the top of the script in this file.');return}
+  db=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  $('main').innerHTML='<p class="mute">Loading your data…</p>';
+  await run(load);render();
+})();
+</script>
+</body></html>
