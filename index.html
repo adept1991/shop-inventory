@@ -84,7 +84,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 0;tex
 const SUPABASE_URL='https://asbooiaszvcfrlzymnnk.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzYm9vaWFzenZjZnJsenltbm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MTE2MjksImV4cCI6MjEwODQ4NzYyOX0.CtI6Qq5qVe6mnPEDA7yJZBUBc1SHmw_gzbr_7ICbExI';
 /* ===================================================================== */
-let S={shop:'Ajith’s POT shop',items:[],bills:[]},db=null,busy=false;
+let S={shop:'Ajith’s POT shop',items:[],bills:[]},db=null,busy=false,eb=null,delB=false;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>'₹'+(+n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
@@ -171,12 +171,41 @@ function gen(){
   }).finally(()=>{busy=false});
 }
 function showBill(no){
-  const b=S.bills.find(x=>x.no===no);if(!b)return;
+  const b=S.bills.find(x=>x.no===no);if(!b)return;delB=false;
   $('dR').innerHTML=`<h3>${esc(S.shop)}</h3><p class="mute">Bill ${b.no} · ${dt(b.date)}${b.customer?'<br>Customer: '+esc(b.customer):''}</p>
   <table><tr><th>Item</th><th>Qty × price</th><th>Amount</th></tr>${b.lines.map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty} × ${fmt(l.price)}</td><td>${fmt(l.price*l.qty)}</td></tr>`).join('')}</table>
   <div class="tot"><span>Total</span><span>${fmt(b.total)}</span></div>
-  <div class="acts"><button onclick="try{window.print()}catch(e){}">Print</button><button class="pri" onclick="$('dR').close()">Done</button></div>`;
+  <p class="err" id="be"></p>
+  <div class="acts"><button class="dng" id="bd" onclick="delBill('${b.id}')">Delete bill</button><button onclick="editBill('${b.no}')">Edit</button><button onclick="try{window.print()}catch(e){}">Print</button><button class="pri" onclick="$('dR').close()">Done</button></div>`;
   $('dR').showModal();
+}
+
+async function delBill(id){
+  if(!delB){delB=true;$('bd').textContent='Tap again to delete and return stock';return}
+  try{const r=await db.rpc('delete_bill',{p_bill:id});if(r.error)throw r.error;await load();render();$('dR').close()}
+  catch(e){delB=false;$('bd').textContent='Delete bill';$('be').textContent='Could not delete: '+(e.message||e)}
+}
+function editBill(no){const b=S.bills.find(x=>x.no===no);eb={no:no,cust:b.customer,q:b.lines.map(l=>l.qty)};renderEdit()}
+function lineMax(l){const i=l.id?find(l.id):null;return (i?i.qty:0)+l.qty}
+function renderEdit(){
+  const b=S.bills.find(x=>x.no===eb.no);
+  $('dR').innerHTML=`<h3>Edit bill ${b.no}</h3>
+  <label for="ec">Customer name</label><input id="ec" value="${esc(eb.cust)}" oninput="eb.cust=this.value" autocomplete="off">
+  ${b.lines.map((l,k)=>`<div class="line"><div><b>${esc(l.name)}</b><small>${fmt(l.price)} each${eb.q[k]<l.qty?' · '+(l.qty-eb.q[k])+' back to stock':''}${eb.q[k]>l.qty?' · '+(eb.q[k]-l.qty)+' more from stock':''}</small></div><div class="step"><button aria-label="Fewer" onclick="eq(${k},-1)">−</button><b>${eb.q[k]}</b><button aria-label="More" onclick="eq(${k},1)">+</button></div></div>`).join('')}
+  <div class="tot"><span>New total</span><span>${fmt(b.lines.reduce((s,l,k)=>s+l.price*eb.q[k],0))}</span></div>
+  <p class="mute">Set a quantity to 0 to remove an item. Stock is adjusted when you save.</p>
+  <p class="err" id="be"></p>
+  <div class="acts"><button onclick="showBill('${b.no}')">Cancel</button><button class="pri" onclick="saveEdit()">Save changes</button></div>`;
+}
+function eq(k,d){const b=S.bills.find(x=>x.no===eb.no),v=eb.q[k]+d;if(v>=0&&v<=lineMax(b.lines[k]))eb.q[k]=v;renderEdit()}
+async function saveEdit(){
+  const b=S.bills.find(x=>x.no===eb.no);
+  try{
+    const r=await db.rpc('update_bill',{p_bill:b.id,p_customer:eb.cust.trim(),p_lines:b.lines.map((l,k)=>({line_id:l.lid,qty:eb.q[k]}))});
+    if(r.error)throw r.error;
+    await load();render();
+    if(S.bills.some(x=>x.no===b.no))showBill(b.no);else $('dR').close();
+  }catch(e){$('be').textContent='Could not save: '+(e.message||e)}
 }
 
 /* ---------- Bills ---------- */
@@ -211,7 +240,7 @@ async function load(){
   const e=a.error||b.error||c.error;if(e)throw e;
   S.items=a.data.map(i=>({id:i.id,name:i.name,sku:i.sku,price:+i.price,cost:+i.cost,qty:i.qty,low:i.low}));
   S.bills=b.data.map(x=>({id:x.id,no:x.bill_no,date:x.created_at,customer:x.customer,total:+x.total,
-    lines:x.bill_lines.map(l=>({id:l.item_id,name:l.name,price:+l.price,cost:+l.cost,qty:l.qty}))}));
+    lines:x.bill_lines.map(l=>({lid:l.id,id:l.item_id,name:l.name,price:+l.price,cost:+l.cost,qty:l.qty}))}));
   if(c.data)S.shop=c.data.shop_name;
   $('shop').value=S.shop;
 }
