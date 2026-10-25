@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Shop Inventory</title>
+<title>Ajith’s POT shop</title>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f3f6f5;--card:#fff;--ink:#17252a;--mute:#5b6b70;--line:#d9e0e0;--acc:#0b6b63;--accink:#fff;--warn:#a85a00;--bad:#b3261e;--warnbg:#fdf0dc;--badbg:#fbe4e2;color-scheme:light}
@@ -84,7 +84,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 0;tex
 const SUPABASE_URL='https://asbooiaszvcfrlzymnnk.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzYm9vaWFzenZjZnJsenltbm5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5MTE2MjksImV4cCI6MjEwODQ4NzYyOX0.CtI6Qq5qVe6mnPEDA7yJZBUBc1SHmw_gzbr_7ICbExI';
 /* ===================================================================== */
-let S={shop:'My Shop',items:[],bills:[]},db=null,busy=false;
+let S={shop:'Ajith’s POT shop',items:[],bills:[]},db=null,busy=false;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>'₹'+(+n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
